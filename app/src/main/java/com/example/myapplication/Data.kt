@@ -1,118 +1,165 @@
 package com.example.myapplication
 
+import com.google.gson.annotations.SerializedName
+
+// ✅ Secure login request model
 data class LoginRequest(
-    val username: String,
-    val password: String
+    @SerializedName("username") val username: String?,
+    @SerializedName("password") val password: String?,
+    @SerializedName("uuid") val uuid: String,
+    val role : String = "P",
+    val system: String = "Windows"
 )
 
 data class LoginResponse(
-    val status: String,
-    val data: Data,
+    @SerializedName("status") val status: String,
+    @SerializedName("data") val data: UserData
 )
 
-data class Data(
-    val userId: Long,
-    val userFirstname: String,
-    val userLastname: String,
-    val userEmail: String,
-    val accessToken: Any?,
-    val subscriptionName: String,
-    val subscription: String,
-    val sku: String,
-    val purchaseToken: Any?,
-    val autoRenew: Boolean,
-    val paymentMethod: String,
-    val children: List<Children>,
-    val devices: List<Device>,
-    val parentDevices: List<Any?>,
-    val childRequests: ChildRequests,
-    val serverTime: Long,
+// ✅ Holds user-specific details
+data class UserData(
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("userFirstname") val firstName: String,
+    @SerializedName("userLastname") val lastName: String,
+    @SerializedName("userEmail") val email: String,
+    @SerializedName("accessToken") val accessToken: String?, // ✅ Changed from Any? to String?
+    @SerializedName("subscriptionName") val subscriptionName: String,
+    @SerializedName("subscription") val subscription: String,
+    @SerializedName("sku") val sku: String,
+    @SerializedName("purchaseToken") val purchaseToken: String?, // ✅ Changed from Any?
+    @SerializedName("autoRenew") val autoRenew: Boolean,
+    @SerializedName("paymentMethod") val paymentMethod: String,
+    @SerializedName("children") val children: List<Child>,
+    @SerializedName("devices") val devices: List<Device>,
+    @SerializedName("parentDevices") val parentDevices: List<Any?>,
+    @SerializedName("childRequests") val childRequests: ChildRequests,
+    @SerializedName("serverTime") val serverTime: Long,
 )
 
-data class Children(
-    val childId: Long,
-    val childName: String,
-    val childIcon: Any?,
-    val timezone: String,
-    val gamingBlocked: Boolean,
-    val socialMediaBlocked: Boolean,
-    val youTubeBlocked: Boolean,
-    val timerDuration: Long,
-    val mainSwitchAutoOffTime: Long,
-    val mainSwitchAutoOnTime: Long,
-    val mandatoryBreakAfter: Long,
-    val mandatoryBreakDuration: Long,
-    val cumulativeScreenTimeTotalAllowed: Long,
-    val screenOffBegin: Long,
-    val screenOffEnd: Long,
-    val schoolHourBegin: Long,
-    val schoolHourEnd: Long,
-    val extensionAutoResponse: Long,
+// ✅ Holds child-specific data
+data class Child(
+    @SerializedName("childId") val childId: Long,
+    @SerializedName("childName") val childName: String,
+    @SerializedName("childIcon") val childIcon: String?, // ✅ Changed from Any?
+    @SerializedName("timezone") val timezone: String,
+    @SerializedName("gamingBlocked") val gamingBlocked: Boolean,
+    @SerializedName("socialMediaBlocked") val socialMediaBlocked: Boolean,
+    @SerializedName("youTubeBlocked") val youTubeBlocked: Boolean,
+    @SerializedName("timerDuration") val timerDuration: Long,
+    @SerializedName("mainSwitchAutoOffTime") val mainSwitchAutoOffTime: Long,
+    @SerializedName("mainSwitchAutoOnTime") val mainSwitchAutoOnTime: Long,
+    @SerializedName("mandatoryBreakAfter") val mandatoryBreakAfter: Long,
+    @SerializedName("mandatoryBreakDuration") val mandatoryBreakDuration: Long,
+    @SerializedName("cumulativeScreenTimeTotalAllowed") val cumulativeScreenTimeTotalAllowed: Long,
+    @SerializedName("screenOffBegin") val screenOffBegin: Long,
+    @SerializedName("screenOffEnd") val screenOffEnd: Long,
+    @SerializedName("schoolHourBegin") val schoolHourBegin: Long,
+    @SerializedName("schoolHourEnd") val schoolHourEnd: Long,
+    @SerializedName("extensionAutoResponse") val extensionAutoResponse: Long,
 )
 
+// ✅ Holds device-specific data
 data class Device(
-    val id: Long,
-    val deviceUuid: String,
-    val deviceName: String,
-    val deviceActive: Boolean,
-    val childId: Long,
-    val childName: String,
-    val childIcon: Any?,
-    val deviceSystem: String,
-    val deviceRole: String,
-    val isSchoolDevice: Boolean,
-    val monitorActive: Boolean,
-    val monitorOnOff: Long,
-    val deviceLastAck: Long,
-    val permissionStatus: Long,
-    val iosMdmSettingComplete: Boolean,
+    @SerializedName("id") val id: Long,
+    @SerializedName("deviceUuid") val deviceUuid: String,
+    @SerializedName("deviceName") val deviceName: String,
+    @SerializedName("deviceActive") val deviceActive: Boolean,
+    @SerializedName("childId") val childId: Long,
+    @SerializedName("childName") val childName: String,
+    @SerializedName("childIcon") val childIcon: String?, // ✅ Changed from Any?
+    @SerializedName("deviceSystem") val deviceSystem: String,
+    @SerializedName("deviceRole") val deviceRole: String,
+    @SerializedName("isSchoolDevice") val isSchoolDevice: Boolean,
+    @SerializedName("monitorActive") val monitorActive: Boolean,
+    @SerializedName("monitorOnOff") val monitorOnOff: Long,
+    @SerializedName("deviceLastAck") val deviceLastAck: Long,
+    @SerializedName("permissionStatus") val permissionStatus: Long,
+    @SerializedName("iosMdmSettingComplete") val iosMdmSettingComplete: Boolean,
 )
 
 data class ChildRequests(
-    val extensionRequests: List<Any?>,
-    val loginRequests: List<Any?>,
+    @SerializedName("extensionRequests") val extensionRequests: List<Any?>,
+    @SerializedName("loginRequests") val loginRequests: List<Any?>,
 )
 
 data class UserRequest(
-    val userId: Int
+    @SerializedName("userId") val userId: Int
 )
 
+// ✅ Used for toggling monitor settings
 data class ToggleMonitor(
-    val userId:Int = 1983,
-    val childId:Int = 1219,
-    val monitorActive:Boolean? = null
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("childId") val childId: Long,
+    @SerializedName("monitorActive") val monitorActive: Boolean? = null,
+    @SerializedName("monitorOnOff") val monitorOnOff: Long
 )
 
-data class ToggleResponse(
-    val status: String,
+data class CallResponse(
+    @SerializedName("status") val status: String
 )
 
 data class ApiResponse(
-    val status: String,
-    val data: UserResponse
+    @SerializedName("status") val status: String,
+    @SerializedName("data") val data: UserResponse
 )
 
-// Data class for the API response
+// ✅ User profile data
 data class UserResponse(
-    val status: String,
-    val userId: Int,
-    val userFirstname: String,
-    val userLastname: String,
-    val userEmail: String,
-    val roles: List<String>,
-    val subscriptionName: String,
-    val subscription: String,
-    val sku: String,
-    val purchaseToken: String?,
-    val autoRenew: Boolean,
-    val paymentMethod: String
+    @SerializedName("status") val status: String,
+    @SerializedName("userId") val userId: Int,
+    @SerializedName("userFirstname") val firstName: String,
+    @SerializedName("userLastname") val lastName: String,
+    @SerializedName("userEmail") val email: String,
+    @SerializedName("roles") val roles: List<String>,
+    @SerializedName("subscriptionName") val subscriptionName: String,
+    @SerializedName("subscription") val subscription: String,
+    @SerializedName("sku") val sku: String,
+    @SerializedName("purchaseToken") val purchaseToken: String?,
+    @SerializedName("autoRenew") val autoRenew: Boolean,
+    @SerializedName("paymentMethod") val paymentMethod: String
 )
 
-//Gaming, Youtube, &Social Media Toggle
+// ✅ Gaming, YouTube, & Social Media toggle request
 data class ToggleRequest(
-    val userId: Int = 1983,
-    val childId: Int = 1219,
-    var gamingBlocked: Boolean? = null,
-    var socialMediaBlocked: Boolean? = null,
-    var youTubeBlocked: Boolean? = null
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("childId") val childId: Long,
+    @SerializedName("gamingBlocked") var gamingBlocked: Boolean,
+    @SerializedName("socialMediaBlocked") var socialMediaBlocked: Boolean,
+    @SerializedName("youTubeBlocked") var youTubeBlocked: Boolean
 )
+
+data class User(
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String
+)
+
+data class DeleteChildRequest(
+    @SerializedName("userId") val userId: Long,
+    @SerializedName("childId") val childId: Long
+)
+
+// Add Child Profile
+data class AddChildProfileRequest(
+    val userId: Int?,
+    val childName: String,
+    val childIcon: String?,
+    val accessToken: String?,
+    val timezone: String
+)
+
+// Change child profile settings
+data class ChangeChildInfoRequest(
+    val userId: Long,
+    val childId: Long,
+    val childName: String?,
+    val childIcon: String?
+)
+
+data class DeleteDeviceRequest(
+    @SerializedName("userId") val userId: Long?,
+    @SerializedName("uuid") val uuid: String
+)
+
+

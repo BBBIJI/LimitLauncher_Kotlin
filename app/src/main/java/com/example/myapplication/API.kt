@@ -2,19 +2,33 @@ package com.example.myapplication
 
 import retrofit2.http.Body
 import retrofit2.http.POST
-import retrofit2.Call
+import retrofit2.Response
 
 interface UserApiService {
     @POST("wp-json/lldb/getInfo")
-    fun UserLogin(@Body request: LoginRequest): Call<LoginResponse>
+    suspend fun userLogin(@Body request: LoginRequest): Response<LoginResponse>
 
-    @POST("wp-json/lldb/getUserWpInfo")
-    fun getUserWpInfo(@Body request: UserRequest): Call<ApiResponse>
-
-    @POST("wp-content/plugins/lldb/toggleMonitor.php")
-    fun ToggleMonitor(@Body request: ToggleMonitor): Call<ToggleResponse>
+//    @POST("wp-json/custom-register/register")
+//    suspend fun registerUser(@Body request: User): Response<RegisterResponse>
 
     @POST("wp-content/plugins/lldb/updateChildInfo.php")
-    fun ToggleChildSettings(@Body request: ToggleRequest?): Call<ToggleResponse>
+    suspend fun changeChildProfileSettings(@Body request: ChangeChildInfoRequest?): Response<CallResponse>
 
+    @POST("wp-content/plugins/lldb/deleteChild.php")
+    suspend fun deleteChild(@Body request: DeleteChildRequest): Response<CallResponse>
+
+    @POST("wp-content/plugins/lldb/deleteDevice.php")
+    suspend fun deleteDevice(@Body request: DeleteDeviceRequest): Response<CallResponse>
+
+    @POST("wp-json/lldb/getUserWpInfo")
+    suspend fun getUserWpInfo(@Body request: UserRequest): Response<ApiResponse>
+
+    @POST("wp-content/plugins/lldb/toggleMonitor.php")
+    suspend fun toggleMonitor(@Body request: ToggleMonitor): Response<CallResponse>
+
+    @POST("wp-content/plugins/lldb/updateChildInfo.php")
+    suspend fun toggleChildSettings(@Body request: ToggleRequest?): Response<CallResponse>
+
+    @POST("wp-content/plugins/lldb/updateDeviceInfo.php")
+    suspend fun addChildProfile(@Body request: AddChildProfileRequest): Response<CallResponse>
 }

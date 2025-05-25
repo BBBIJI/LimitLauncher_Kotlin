@@ -1,4 +1,4 @@
-package com.example.myapplication.Icons
+package com.example.myapplication.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType

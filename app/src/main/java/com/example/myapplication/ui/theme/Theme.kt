@@ -1,7 +1,7 @@
 package com.example.myapplication.ui.theme
 
-import android.app.Activity
 import android.os.Build
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -9,6 +9,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -50,9 +54,21 @@ fun MyApplicationTheme(
         else -> LightColorScheme
     }
 
+    val gradientBrush = Brush.linearGradient(
+        colors = listOf(Color(0xFF3f66a7), Color(0xFF0c1f3f)),
+        start = Offset(0f, 0f),
+        end = Offset(1000f, 1000f)
+    )
+
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
-    )
+    ){
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .background(gradientBrush)
+        ) {
+            content()
+        }
+    }
 }
