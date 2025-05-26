@@ -1,5 +1,9 @@
 package com.example.myapplication.pages
 
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 fun formatDuration(seconds: Int): String {
     val minutes = seconds / 60
     val hours = minutes / 60
@@ -12,3 +16,15 @@ fun formatDuration(seconds: Int): String {
         else -> "$days day${if (days.toLong() == 1L) "" else "s"} ago"
     }
 }
+
+
+fun getCurrentFormattedTime(): String {
+    val currentUnixTimestamp: Long = Instant.now().epochSecond
+    val dateTime = Instant.ofEpochSecond(currentUnixTimestamp)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDateTime()
+
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return dateTime.format(formatter)
+}
+

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,7 +79,7 @@ fun MainPage(viewModel: AppViewModel, navController: NavHostController, paddingV
             val childDevices = viewModel.loginResponse?.data?.devices?.filter { it.childId == child.childId }
             val allChildDevicesActive = childDevices?.all { monitorStates[it.childId] == true } == true
 
-            val duration = remember { mutableStateOf(0) }
+            val duration = remember { mutableIntStateOf(0) }
 
             LaunchedEffect(Unit) {
                 while (true) {

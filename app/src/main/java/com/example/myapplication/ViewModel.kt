@@ -280,13 +280,13 @@ class AppViewModel : ViewModel() {
     }
 
 
-    fun toggleMonitor(monitorActive: Boolean, childId: Long) {
-        // Update the local monitor state for the given childId
+    fun toggleMonitor(monitorActive: Boolean, childId: Long, context: Context) {
+        // Update local UI state for immediate feedback
         val updatedStates = _monitorStates.value.toMutableMap()
         updatedStates[childId] = monitorActive
-        _monitorStates.value = updatedStates // Emit the updated states
+        _monitorStates.value = updatedStates
 
-        startLoading() // Show loading while the API is processing
+        startLoading()
 
         viewModelScope.launch {
             try {
@@ -300,24 +300,27 @@ class AppViewModel : ViewModel() {
                 }
                 val response = request?.let { apiService.toggleMonitor(it) }
 
-                if (response != null && !response.isSuccessful) {
-                    responseMessage = "Failed to toggle monitor: ${response.message()}"
-                    startMonitorDurationTimer()
-                }
+                if (response != null && response.isSuccessful) {
+                    // ✅ Now refresh the user data to get updated monitorOnOff time
+                    refreshChildren(context)
 
-                stopLoading() // Hide loading once the API response is received
+                    // ✅ Optional: recalculate durations immediately
+                    calculateAllMonitorDurations()
+                } else {
+                    responseMessage = "Failed to toggle monitor: ${response?.message() ?: "No response"}"
+                }
             } catch (e: IOException) {
-                stopLoading()
                 responseMessage = "Network error: ${e.message}"
             } catch (e: HttpException) {
-                stopLoading()
                 responseMessage = "Server error: ${e.message}"
             } catch (e: Exception) {
-                stopLoading()
                 responseMessage = "Unknown error: ${e.message}"
+            } finally {
+                stopLoading()
             }
         }
     }
+
 
 
     fun deleteChild(userId: Long, childId: Long, context: Context) {

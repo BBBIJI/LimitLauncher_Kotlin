@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,10 +65,8 @@ import com.example.myapplication.CustomActionButton
 import com.example.myapplication.Device
 import com.example.myapplication.R
 import com.example.myapplication.navigation.Screens
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun ChildSettingsMenu(
@@ -86,13 +85,17 @@ fun ChildSettingsMenu(
     val context = LocalContext.current
     val deleteResult by viewmodel.deleteResult.collectAsState()
 
-    val currentUnixTimestamp: Long = Instant.now().epochSecond
-    val dateTime = Instant.ofEpochSecond(currentUnixTimestamp)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDateTime()
+    val duration = remember { mutableIntStateOf(0) }
 
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    val formattedTime = dateTime.format(formatter)
+    LaunchedEffect(Unit) {
+        while (true) {
+            val seconds = viewmodel.getMonitorDurationSeconds(args.childId)
+            duration.value = (seconds ?: 0).toInt()
+            delay(1000)
+        }
+    }
+
+    val durationText = formatDuration(duration.value)
 
     LaunchedEffect(deleteResult) {
         deleteResult?.let {
@@ -137,7 +140,7 @@ fun ChildSettingsMenu(
                 iconPainter,
                 onColor,
                 childId = args.childId,
-                formattedTime,
+                durationText,
                 allDevicesActive
             )
 
@@ -217,6 +220,9 @@ fun DeviceButton(
 ) {
     val swipeableState = rememberSwipeableState(initialValue = 0)
     val anchors = mapOf(0f to 0, -200f to 1)
+
+    val context = LocalContext.current
+
 
     // Observe monitorActive state for all devices
     val monitorActive by viewmodel.monitorStates.collectAsState()
@@ -300,7 +306,10 @@ fun DeviceButton(
                         Switch(
                             checked = isMonitorActive,  // Use the observed state here
                             onCheckedChange = {
-                                viewmodel.toggleMonitor(it, device.childId)  // Update the ViewModel when toggled
+                                viewmodel.toggleMonitor(
+                                    it, device.childId,
+                                    context = context
+                                )  // Update the ViewModel when toggled
                             },
                             modifier = Modifier
                                 .padding(end = 24.dp)

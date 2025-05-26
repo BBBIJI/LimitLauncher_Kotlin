@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -51,6 +52,7 @@ fun CustomActionButton(
     val monitorStates by viewModel.monitorStates.collectAsState()
     val isOnState = childId?.let { monitorStates[it] } ?: initialState
     val currentColor = if (isOnState) onColor else Color(0xFF0f1a38)
+    val context = LocalContext.current
 
     Card(
         onClick = onClick ?: {},
@@ -90,7 +92,10 @@ fun CustomActionButton(
                     .clickable {
                         val newState = !isOnState
                         childId?.let {
-                            viewModel.toggleMonitor(newState, it)
+                            viewModel.toggleMonitor(
+                                newState, it,
+                                context = context
+                            )
                         }
                     }
             )
