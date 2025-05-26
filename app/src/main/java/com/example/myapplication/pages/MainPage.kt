@@ -40,10 +40,8 @@ import com.example.myapplication.AppViewModel
 import com.example.myapplication.CustomActionButton
 import com.example.myapplication.R
 import com.example.myapplication.navigation.Screens
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -52,9 +50,6 @@ fun MainPage(viewModel: AppViewModel, navController: NavHostController, paddingV
     val userId = viewModel.loginResponse?.data?.userId ?: 0
     val context = LocalContext.current
     val deleteResult by viewModel.deleteResult.collectAsState()
-
-    val childOnTimestamps = viewModel.childOnTimestamps
-    val childLastOnTimestamps = viewModel.childLastOnTimestamps
 
 
     LaunchedEffect(deleteResult) {
@@ -83,22 +78,21 @@ fun MainPage(viewModel: AppViewModel, navController: NavHostController, paddingV
             val childDevices = viewModel.loginResponse?.data?.devices?.filter { it.childId == child.childId }
             val allChildDevicesActive = childDevices?.all { monitorStates[it.childId] == true } == true
 
-            val timestamp = if (allChildDevicesActive) {
-                childOnTimestamps[child.childId]
-            } else {
-                childLastOnTimestamps[child.childId]
+            val duration = remember { mutableStateOf(0) }
+
+            LaunchedEffect(Unit) {
+                while (true) {
+                    val seconds = viewModel.getMonitorDurationSeconds(child.childId)
+                    duration.value = (seconds ?: 0).toInt()
+                    delay(1000)
+                }
             }
 
-            val formattedTime = timestamp?.let {
-                Instant.ofEpochSecond(it)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime()
-                    .format(DateTimeFormatter.ofPattern("HH:mm"))
-            } ?: "N/A"
+            val durationText = formatDuration(duration.value)
 
             Box(modifier = Modifier.padding(20.dp)) {
                 SwipeableButton(
-                    time = formattedTime,
+                    time = durationText,
                     navController = navController,
                     viewModel = viewModel,
                     name = child.childName,

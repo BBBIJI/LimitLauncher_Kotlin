@@ -91,7 +91,6 @@ fun CustomActionButton(
                         val newState = !isOnState
                         childId?.let {
                             viewModel.toggleMonitor(newState, it)
-                            viewModel.setChildState(it, newState)
                         }
                     }
             )

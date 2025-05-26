@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -69,12 +70,6 @@ class AppViewModel : ViewModel() {
         return _monitorStates.value[childId] ?: false
     }
 
-    private val _childOnTimestamps = mutableStateMapOf<Long, Long>()
-    val childOnTimestamps: Map<Long, Long> get() = _childOnTimestamps
-
-    private val _childLastOnTimestamps = mutableStateMapOf<Long, Long>()
-    val childLastOnTimestamps: Map<Long, Long> get() = _childLastOnTimestamps
-
 
     data class ChildToggleState(
         val gamingBlocked: Boolean = true,
@@ -84,6 +79,30 @@ class AppViewModel : ViewModel() {
 
     var toggleState by mutableStateOf(ChildToggleState())
         private set
+
+    private val _monitorDurations = MutableStateFlow<Map<Long, Long>>(emptyMap())
+    val monitorDurations: StateFlow<Map<Long, Long>> = _monitorDurations
+
+    fun startMonitorDurationTimer() {
+        viewModelScope.launch {
+            while (true) {
+                val currentTime = Instant.now().epochSecond
+                val devices = loginResponse?.data?.devices ?: return@launch
+
+                val updatedDurations = loginResponse?.data?.children?.associate { child ->
+                    val relevantDevices = devices.filter { it.childId == child.childId && it.monitorOnOff <= currentTime }
+                    val latestDevice = relevantDevices.maxByOrNull { it.monitorOnOff }
+                    val duration = latestDevice?.let { currentTime - it.monitorOnOff } ?: 0L
+                    child.childId to duration
+                } ?: emptyMap()
+
+                _monitorDurations.value = updatedDurations
+                delay(1000)
+            }
+        }
+    }
+
+
 
     fun updateToggleState(
         gaming: Boolean? = null,
@@ -96,25 +115,35 @@ class AppViewModel : ViewModel() {
             youTubeBlocked = youTube ?: toggleState.youTubeBlocked
         )
     }
+    fun calculateAllMonitorDurations() {
+        val durations = mutableMapOf<Long, Long>()
 
-
-
-
-    fun setChildState(childId: Long, isOn: Boolean) {
-        val now = Instant.now().epochSecond
-        if (isOn) {
-            if (!_childOnTimestamps.containsKey(childId)) {
-                _childOnTimestamps[childId] = now
+        loginResponse?.data?.children?.forEach { child ->
+            val duration = getMonitorDurationSeconds(child.childId)
+            if (duration != null) {
+                durations[child.childId] = duration
             }
-        } else {
-            _childOnTimestamps[childId]?.let {
-                _childLastOnTimestamps[childId] = it
-            }
-            _childOnTimestamps.remove(childId)
         }
+
+        _monitorDurations.value = durations
     }
 
+    fun getMonitorDurationSeconds(childId: Long): Long? {
+        val currentTime = Instant.now().epochSecond
+        val devices = loginResponse?.data?.devices ?: return null
 
+        // Filter by matching child ID
+        val matchingDevices = devices.filter { it.childId == childId }
+
+        // Get the most recent past monitorOnOff time
+        val closestDevice = matchingDevices
+            .filter { it.monitorOnOff <= currentTime }
+            .minByOrNull { currentTime - it.monitorOnOff }
+
+        return closestDevice?.let {
+            currentTime - it.monitorOnOff
+        }
+    }
 
 
     fun addChildProfile(context: Context){
@@ -265,13 +294,15 @@ class AppViewModel : ViewModel() {
                     ToggleMonitor(
                         userId = it,
                         childId = childId,
-                        monitorActive = monitorActive
+                        monitorActive = monitorActive,
+                        monitorOnOff = Instant.now().epochSecond
                     )
                 }
                 val response = request?.let { apiService.toggleMonitor(it) }
 
                 if (response != null && !response.isSuccessful) {
                     responseMessage = "Failed to toggle monitor: ${response.message()}"
+                    startMonitorDurationTimer()
                 }
 
                 stopLoading() // Hide loading once the API response is received
