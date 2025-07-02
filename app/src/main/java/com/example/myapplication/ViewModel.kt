@@ -14,6 +14,7 @@ import java.io.IOException
 import java.time.Instant
 import java.time.ZoneId
 import java.util.UUID
+import com.google.firebase.installations.FirebaseInstallations
 
 class AppViewModel : ViewModel() {
 
@@ -204,40 +205,34 @@ class AppViewModel : ViewModel() {
 
 
     fun login(context: Context) {
-        viewModelScope.launch {
-            try {
-                val uuid = getOrCreateAppInstanceId(context = context)
-                val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
-                val responseBody = response.body()
+        getOrCreateAppInstanceId(context) { uuid ->
+            viewModelScope.launch {
+                try {
+                    val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
+                    val responseBody = response.body()
 
-                if (response.isSuccessful) {
-                    if (responseBody != null) {
-                        if (responseBody.status == "success") {
-                            loginResponse = responseBody
-                            responseMessage = "Login Successful"
-                            loginState = true
-                            _isLoggedIn.value = true // Update state flow
-                            Log.d("AppViewModel", "Login successful")
-                            loading = false
-                        } else {
-                            responseMessage = "Invalid credentials"
-                            Log.d("AppViewModel", "Invalid credentials")
-                            loading = false
-                        }
+                    if (response.isSuccessful && responseBody?.status == "success") {
+                        loginResponse = responseBody
+                        responseMessage = "Login Successful"
+                        loginState = true
+                        _isLoggedIn.value = true
+                        Log.d("AppViewModel", "Login successful with UUID/FID: $uuid")
+                    } else {
+                        responseMessage = "Invalid credentials"
+                        Log.d("AppViewModel", "Invalid credentials")
                     }
+                } catch (e: IOException) {
+                    responseMessage = "Network error: ${e.message}"
+                    Log.e("AppViewModel", "Network error: ${e.message}", e)
+                } catch (e: HttpException) {
+                    responseMessage = "Server error: ${e.message()}"
+                    Log.e("AppViewModel", "Server error: ${e.message()}", e)
+                } catch (e: Exception) {
+                    responseMessage = "Unknown error: ${e.message}"
+                    Log.e("AppViewModel", "Error during login: ${e.message}", e)
+                } finally {
+                    loading = false
                 }
-            } catch (e: IOException) {
-                responseMessage = "Network error: ${e.message}"
-                Log.e("AppViewModel", "Network error: ${e.message}", e)
-                loading = false
-            } catch (e: HttpException) {
-                responseMessage = "Server error: ${e.message()}"
-                Log.e("AppViewModel", "Server error: ${e.message()}", e)
-                loading = false
-            } catch (e: Exception) {
-                responseMessage = "Unknown error: ${e.message}"
-                Log.e("AppViewModel", "Error during login: ${e.message}", e)
-                loading = false
             }
         }
     }
@@ -364,41 +359,52 @@ class AppViewModel : ViewModel() {
     }
 
     fun refreshChildren(context: Context) {
-        viewModelScope.launch {
-            try {
-                val uuid = getOrCreateAppInstanceId(context)
-                val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
-                val refreshedLogin = response.body()
-                if (response.isSuccessful && refreshedLogin?.status == "success") {
-                    loginResponse = refreshedLogin
+        getOrCreateAppInstanceId(context) { uuid ->
+            viewModelScope.launch {
+                try {
+                    val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
+                    val refreshedLogin = response.body()
 
-                    // ✅ Reflect API monitorActive state
-                    val monitorMap: Map<Long, Boolean> = refreshedLogin.data?.devices
-                        ?.associate { it.childId to it.monitorActive } ?: emptyMap()
-                    _monitorStates.value = monitorMap
+                    if (response.isSuccessful && refreshedLogin?.status == "success") {
+                        loginResponse = refreshedLogin
 
-                } else {
-                    _deleteResult.value = "Failed to refresh children list"
+                        // ✅ Reflect API monitorActive state
+                        val monitorMap: Map<Long, Boolean> = refreshedLogin.data?.devices
+                            ?.associate { it.childId to it.monitorActive } ?: emptyMap()
+                        _monitorStates.value = monitorMap
+                    } else {
+                        _deleteResult.value = "Failed to refresh children list"
+                    }
+                } catch (e: Exception) {
+                    _deleteResult.value = "Error refreshing: ${e.message}"
                 }
-            } catch (e: Exception) {
-                _deleteResult.value = "Error refreshing: ${e.message}"
             }
         }
     }
+
 
     fun clearDeleteResult() {
         _deleteResult.value = null
     }
 
-    private fun getOrCreateAppInstanceId(context: Context): String {
+    private fun getOrCreateAppInstanceId(context: Context, onResult: (String) -> Unit) {
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        var id = prefs.getString("app_instance_id", null)
-        if (id == null) {
-            id = UUID.randomUUID().toString()
-            prefs.edit().putString("app_instance_id", id).apply()
+        val existingId = prefs.getString("app_instance_id", null)
+
+        if (existingId != null) {
+            onResult(existingId)
+        } else {
+            FirebaseInstallations.getInstance().id
+                .addOnSuccessListener { fid ->
+                    prefs.edit().putString("app_instance_id", fid).apply()
+                    Log.d("FID", "New Firebase Installation ID stored: $fid")
+                    onResult(fid)
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FID", "Failed to get Firebase Installation ID", e)
+                    onResult(UUID.randomUUID().toString()) // fallback
+                }
         }
-        return id
     }
 }
-
 

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     id("kotlin-parcelize")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -67,6 +68,11 @@ dependencies {
     implementation (libs.converter.gson)
     implementation (libs.gson)
     implementation(libs.kotlinx.serialization.json)
+    implementation (libs.firebase.installations)
+    implementation(libs.firebase.auth.ktx)         // Firebase Auth
+    implementation(libs.firebase.installations.ktx) // Installations
+
+
 
     implementation (libs.androidx.material.icons.extended)
 }
