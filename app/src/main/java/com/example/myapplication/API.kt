@@ -8,8 +8,8 @@ interface UserApiService {
     @POST("wp-json/lldb/getInfo")
     suspend fun userLogin(@Body request: LoginRequest): Response<LoginResponse>
 
-//    @POST("wp-json/custom-register/register")
-//    suspend fun registerUser(@Body request: User): Response<RegisterResponse>
+    @POST("wp-json/custom-register/register")
+    suspend fun registerUser(@Body request: UserRegistrationRequest): Response<RegistrationResponse>
 
     @POST("wp-content/plugins/lldb/updateChildInfo.php")
     suspend fun changeChildProfileSettings(@Body request: ChangeChildInfoRequest?): Response<CallResponse>

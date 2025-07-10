@@ -128,12 +128,23 @@ data class ToggleRequest(
     @SerializedName("youTubeBlocked") var youTubeBlocked: Boolean
 )
 
-data class User(
-    @SerializedName("firstName") val firstName: String,
-    @SerializedName("lastName") val lastName: String,
-    @SerializedName("email") val email: String,
-    @SerializedName("password") val password: String
+data class UserRegistrationRequest(
+    val firstname: String,
+    val lastname: String,
+    val email: String,
+    val password: String,
+    val uuid: String,
+    val role: String = "P",
+    val system: String = "Android"
 )
+
+data class RegistrationResponse(
+    val status: String,
+    val errorCode: Int,
+    val errorMessage: String
+)
+
+
 
 data class DeleteChildRequest(
     @SerializedName("userId") val userId: Long,

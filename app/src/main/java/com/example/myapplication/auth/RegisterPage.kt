@@ -1,5 +1,6 @@
 package com.example.myapplication.auth
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -27,14 +29,6 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 fun RegisterScreen(navController: NavHostController, viewModel: AppViewModel) {
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-
-//    LaunchedEffect(isLoggedIn) {
-//        if (isLoggedIn) {
-//            navController.navigate("MainPage") {
-//                popUpTo("LoginScreen") { inclusive = true } // Prevents going back to login
-//            }
-//        }
-//    }
 
     Column(
         modifier = Modifier
@@ -109,14 +103,24 @@ fun RegisterForm(viewModel: AppViewModel, navController: NavHostController) {
             .fillMaxSize()
             .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
-        InputField(Icons.Default.Person, "First Name")
-        InputField(null, "Last Name")
-        InputField(null, "E-mail")
+        InputField(Icons.Default.Person, "First Name", value = viewModel.firstNameInput) {
+            viewModel.firstNameInput = it
+        }
+        InputField(null, "Last Name", value = viewModel.lastNameInput) {
+            viewModel.lastNameInput = it
+        }
+        InputField(null, "E-mail", value = viewModel.emailInput) {
+            viewModel.emailInput = it
+        }
         Spacer(modifier = Modifier.height(32.dp))
-        InputField(Icons.Default.Lock, "Password", isPassword = true)
-        InputField(null, "Confirm Password", isPassword = true)
+        InputField(Icons.Default.Lock, "Password", isPassword = true, value = viewModel.passwordInput) {
+            viewModel.passwordInput = it
+        }
+        InputField(null, "Confirm Password", isPassword = true, value = viewModel.confirmPasswordInput) {
+            viewModel.confirmPasswordInput = it
+        }
         Spacer(modifier = Modifier.height(20.dp))
-        RegisterButton(navController, viewModel, coroutineScope)
+        RegisterButton(navController, viewModel, coroutineScope, context = LocalContext.current)
         TextButton(onClick = {navController.navigate(Screens.Login)}, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Text("Already have an account? Log In!", color = Color(0xFF0D47A1),)
         }
@@ -128,27 +132,30 @@ fun RegisterForm(viewModel: AppViewModel, navController: NavHostController) {
 }
 
 @Composable
-fun RegisterButton(navController: NavHostController, viewModel: AppViewModel, coroutineScope: CoroutineScope) {
+fun RegisterButton(
+    navController: NavHostController,
+    viewModel: AppViewModel,
+    coroutineScope: CoroutineScope,
+    context: Context
+) {
     val responseMessage = viewModel.responseMessage
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Button(
             onClick = {
-//                viewModel.loading = true
-//                viewModel.login()
-                navController.navigate(Screens.Home)
-                viewModel.loginState = true
-                viewModel.isDrawer = true
+                viewModel.registerUser(context) {
+                    navController.navigate(Screens.Home)
+                    viewModel.loginState = true
+                    viewModel.isDrawer = true
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF3f66a7), Color(0xFF0c1f3f))
-                    ), shape = ButtonDefaults.shape
-                ),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
+                .padding(horizontal = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF3f66a7),
+                contentColor = Color.White
+            ),
             enabled = !viewModel.loading
         ) {
             if (viewModel.loading) {
@@ -157,29 +164,34 @@ fun RegisterButton(navController: NavHostController, viewModel: AppViewModel, co
                 Text(text = "CREATE ACCOUNT", fontSize = 16.sp)
             }
         }
+
+        if (responseMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(responseMessage, color = Color.Red)
+        }
     }
 }
 
+
 @Composable
-fun InputField(icon: ImageVector?, placeholder: String, isPassword: Boolean = false) {
-    var text by remember { mutableStateOf("") }
+fun InputField(
+    icon: ImageVector?,
+    placeholder: String,
+    isPassword: Boolean = false,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
 
-    Row(
-        modifier = Modifier.padding(end = 20.dp)
-    ) {
+    Row(modifier = Modifier.padding(end = 20.dp)) {
         if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.padding(16.dp)
-                )
-        }else{
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.padding(16.dp))
+        } else {
             Spacer(modifier = Modifier.width(54.dp))
         }
         TextField(
-            value = text,
-            onValueChange = { text = it },
+            value = value,
+            onValueChange = onValueChange,
             placeholder = { Text(text = placeholder) },
             visualTransformation = visualTransformation,
             modifier = Modifier.fillMaxWidth(),
@@ -192,3 +204,4 @@ fun InputField(icon: ImageVector?, placeholder: String, isPassword: Boolean = fa
         )
     }
 }
+

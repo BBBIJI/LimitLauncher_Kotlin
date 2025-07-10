@@ -28,6 +28,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,6 +41,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import com.example.myapplication.AppViewModel
 import com.example.myapplication.Child
@@ -57,21 +61,35 @@ fun ChildSettings(
 ) {
     val deleteResult by viewModel.deleteResult.collectAsState()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshChildById(context, args.childId) { child ->
+                    child?.let {
+                        viewModel.updateToggleState(
+                            gaming = it.gamingBlocked,
+                            socialMedia = it.socialMediaBlocked,
+                            youTube = it.youTubeBlocked
+                        )
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     LaunchedEffect(deleteResult) {
         deleteResult?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             viewModel.clearDeleteResult()
-        }
-    }
-    LaunchedEffect(args.childId) {
-        val childInfo = viewModel.loginResponse?.data?.children?.find { it.childId == args.childId }
-        childInfo?.let {
-            viewModel.updateToggleState(
-                gaming = it.gamingBlocked,
-                socialMedia = it.socialMediaBlocked,
-                youTube = it.youTubeBlocked
-            )
         }
     }
 

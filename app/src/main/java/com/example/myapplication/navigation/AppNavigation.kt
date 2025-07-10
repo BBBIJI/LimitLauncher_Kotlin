@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -118,6 +119,7 @@ fun AppNavigationGraph(
     viewModel: AppViewModel,
     navController: NavHostController
 ) {
+    val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -299,11 +301,16 @@ fun AppNavigationGraph(
                     tint = Color.White,
                     modifier = Modifier.padding(16.dp)
                 )
-                Text("Log Out", color = Color.White, modifier = Modifier.padding(16.dp))
+                Text("Log Out", color = Color.White, modifier = Modifier.padding(16.dp).clickable {
+                    viewModel.logout(context)
+                    navController.navigate(Screens.Login) {
+                        popUpTo(0) // Clears the backstack
+                    }
+                })
             }
         }
-    }, drawerState = drawerState) {
-        Scaffold(
+    }, drawerState = drawerState, gesturesEnabled = false) {
+    Scaffold(
             topBar = {
                 if (viewModel.loginState) {
                     CenterAlignedTopAppBar(

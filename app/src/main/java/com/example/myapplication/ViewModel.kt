@@ -18,6 +18,11 @@ import com.google.firebase.installations.FirebaseInstallations
 
 class AppViewModel : ViewModel() {
 
+    var firstNameInput by mutableStateOf("")
+    var lastNameInput by mutableStateOf("")
+    var confirmPasswordInput by mutableStateOf("")
+
+
     var isDrawer by mutableStateOf(false)
     var loginState by mutableStateOf(false)
     var loginResponse by mutableStateOf<LoginResponse?>(null)
@@ -84,6 +89,54 @@ class AppViewModel : ViewModel() {
     private val _monitorDurations = MutableStateFlow<Map<Long, Long>>(emptyMap())
     val monitorDurations: StateFlow<Map<Long, Long>> = _monitorDurations
 
+    fun logout(context: Context) {
+        // Clear login state
+        _isLoggedIn.value = false
+        isDrawer = false
+        loginState = false
+        emailInput = ""
+        passwordInput = ""
+        responseMessage = ""
+        // Optionally clear shared preferences or tokens
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+    }
+
+
+    fun registerUser(context: Context, onSuccess: () -> Unit) {
+        getOrCreateAppInstanceId(context) { uuid ->
+            viewModelScope.launch {
+                try {
+                    loading = true
+                    val request = UserRegistrationRequest(
+                        firstname = firstNameInput,
+                        lastname = lastNameInput,
+                        email = emailInput,
+                        password = passwordInput,
+                        uuid = uuid
+                    )
+
+                    val response = apiService.registerUser(request)
+
+                    if (response.code() == 403) {
+                        Log.d("Register", "User registered successfully (HTTP 403)")
+                        responseMessage = "Registered (403, but treated as success)"
+                        onSuccess()
+                    } else {
+                        responseMessage = "Registration failed: ${response.code()}"
+                        Log.e("Register", "Failed with code ${response.code()} - ${response.errorBody()?.string()}")
+                    }
+                } catch (e: Exception) {
+                    responseMessage = "Error: ${e.message}"
+                    Log.e("Register", "Error during register: ${e.message}")
+                } finally {
+                    loading = false
+                }
+            }
+        }
+    }
+
+
     fun startMonitorDurationTimer() {
         viewModelScope.launch {
             while (true) {
@@ -102,6 +155,30 @@ class AppViewModel : ViewModel() {
             }
         }
     }
+
+    fun refreshChildById(context: Context, childId: Long, onRefreshed: (Child?) -> Unit) {
+        getOrCreateAppInstanceId(context) { uuid ->
+            viewModelScope.launch {
+                try {
+                    val response = apiService.userLogin(
+                        LoginRequest(emailInput, passwordInput, uuid)
+                    )
+                    val refreshedLogin = response.body()
+                    if (response.isSuccessful && refreshedLogin?.status == "success") {
+                        loginResponse = refreshedLogin
+                        val child = refreshedLogin.data?.children?.find { it.childId == childId }
+                        onRefreshed(child)
+                    } else {
+                        onRefreshed(null)
+                    }
+                } catch (e: Exception) {
+                    Log.e("refreshChildById", "Error: ${e.message}")
+                    onRefreshed(null)
+                }
+            }
+        }
+    }
+
 
 
 

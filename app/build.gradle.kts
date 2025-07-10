@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,6 +72,8 @@ dependencies {
     implementation (libs.firebase.installations)
     implementation(libs.firebase.auth.ktx)         // Firebase Auth
     implementation(libs.firebase.installations.ktx) // Installations
+    implementation (libs.guava.listenablefuture)
+
 
 
 
