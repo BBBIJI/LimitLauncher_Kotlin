@@ -93,17 +93,6 @@ fun AddChildProfile(
                 }
             }
         }
-//        item {
-//            OutlinedTextField(
-//                value = deviceNameInput,
-//                onValueChange = {deviceNameInput = it},
-//                label = { Text("Device Name",modifier = Modifier.fillMaxWidth()) },
-//                shape = RoundedCornerShape(50.dp),
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(50.dp)
-//            )
-//        }
         item {
             Button(
                 onClick = {viewModel.addChildProfile(context = context)}
@@ -113,35 +102,3 @@ fun AddChildProfile(
         }
     }
 }
-
-//@Composable
-//fun SelectableIcon(
-//    resId: Int,
-//    index: String,
-//    selectedIndex: String?,
-//    onSelected: (String) -> Unit
-//) {
-//    Box(
-//        modifier = Modifier
-//            .padding(5.dp)
-//            .size(80.dp)
-//            .border(
-//                width = if (selectedIndex == index) 3.dp else 0.dp,
-//                color = if (selectedIndex == index) Color.Yellow else Color.Transparent,
-//                shape = CircleShape
-//            )
-//            .clickable(
-//                onClick = { onSelected(index) },
-//                indication = null,
-//                interactionSource = remember { MutableInteractionSource() }
-//            ),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Icon(
-//            painter = painterResource(resId),
-//            contentDescription = "Edit",
-//            tint = Color.Unspecified,
-//            modifier = Modifier.size(80.dp)
-//        )
-//    }
-//}

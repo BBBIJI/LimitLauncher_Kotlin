@@ -56,6 +56,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -120,10 +122,32 @@ fun AppNavigationGraph(
     navController: NavHostController
 ) {
     val context = LocalContext.current
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
+
+    val drawerShouldBeOpen by viewModel.drawerShouldBeOpen.collectAsState()
+
+    val actualDrawerState = rememberDrawerState( // Renamed to avoid conflict if 'drawerState' is used elsewhere
+        initialValue = if (drawerShouldBeOpen) DrawerValue.Open else DrawerValue.Closed,
+        confirmStateChange = { newDrawerValue ->
+            viewModel.onDrawerPhysicalStateChanged(newDrawerValue == DrawerValue.Open)
+            true
+        }
+    )
+
+    LaunchedEffect(drawerShouldBeOpen, actualDrawerState.isOpen) {
+        // Only try to open/close if the desired state differs from the current physical state
+        if (drawerShouldBeOpen && !actualDrawerState.isOpen) {
+            scope.launch {
+                actualDrawerState.open()
+            }
+        } else if (!drawerShouldBeOpen && actualDrawerState.isOpen) {
+            scope.launch {
+                actualDrawerState.close()
+            }
+        }
+    }
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -138,7 +162,7 @@ fun AppNavigationGraph(
                 IconButton(
                     onClick = {
                         scope.launch {
-                            drawerState.close()
+                            viewModel.closeDrawer()
                         }
                     }
                 ) {
@@ -185,7 +209,7 @@ fun AppNavigationGraph(
                             .clickable {
                                 scope.launch {
                                     navController.navigate(Screens.Personal)
-                                    drawerState.close()
+                                    viewModel.closeDrawer()
                                 }
                             })
                     Text(text = "•" +
@@ -197,7 +221,7 @@ fun AppNavigationGraph(
                             .clickable {
                                 scope.launch {
                                     navController.navigate(Screens.Password)
-                                    drawerState.close()
+                                    viewModel.closeDrawer()
                                 }
                             })
                     Text(text = "• Subscription",
@@ -208,7 +232,7 @@ fun AppNavigationGraph(
                             .clickable {
                                 scope.launch {
                                     navController.navigate(Screens.Subscription)
-                                    drawerState.close()
+                                    viewModel.closeDrawer()
                                 }
                             })
                 }
@@ -217,7 +241,7 @@ fun AppNavigationGraph(
                 modifier = Modifier.clickable {
                     scope.launch {
                         navController.navigate(Screens.About)
-                        drawerState.close()
+                        viewModel.closeDrawer()
                     }
                 }
             ) {
@@ -237,7 +261,7 @@ fun AppNavigationGraph(
                 modifier = Modifier.clickable {
                     scope.launch {
                         navController.navigate(Screens.CustomerSupport)
-                        drawerState.close()
+                        viewModel.closeDrawer()
                     }
                 }
             ) {
@@ -257,7 +281,7 @@ fun AppNavigationGraph(
                 modifier = Modifier.clickable {
                     scope.launch {
                         navController.navigate(Screens.Language)
-                        drawerState.close()
+                        viewModel.closeDrawer()
                     }
                 }
             ) {
@@ -277,7 +301,7 @@ fun AppNavigationGraph(
                 modifier = Modifier.clickable {
                     scope.launch {
                         navController.navigate(Screens.Devices)
-                        drawerState.close()
+                        viewModel.closeDrawer()
                     }
                 }
             ) {
@@ -301,15 +325,17 @@ fun AppNavigationGraph(
                     tint = Color.White,
                     modifier = Modifier.padding(16.dp)
                 )
-                Text("Log Out", color = Color.White, modifier = Modifier.padding(16.dp).clickable {
-                    viewModel.logout(context)
-                    navController.navigate(Screens.Login) {
-                        popUpTo(0) // Clears the backstack
-                    }
-                })
+                Text("Log Out", color = Color.White, modifier = Modifier
+                    .padding(16.dp)
+                    .clickable {
+                        viewModel.logout(context)
+                        navController.navigate(Screens.Login) {
+                            popUpTo(0) // Clears the backstack
+                        }
+                    })
             }
         }
-    }, drawerState = drawerState, gesturesEnabled = false) {
+    },drawerState = actualDrawerState, gesturesEnabled = false) {
     Scaffold(
             topBar = {
                 if (viewModel.loginState) {
@@ -333,7 +359,7 @@ fun AppNavigationGraph(
                                     ) {
                                         IconButton(
                                             onClick = {
-                                                scope.launch { drawerState.open() }
+                                                scope.launch { viewModel.openDrawer() }
                                             }
                                         ) {
                                             Icon(
@@ -511,7 +537,7 @@ fun AppNavigationGraph(
                         LanguagePage(navController, viewModel, paddingvalues)
                     }
                     composable<Screens.Devices> {
-                        Devices(navController, paddingvalues)
+                        Devices(navController, paddingvalues,viewModel)
                     }
                     composable<Screens.AddChildDevice> {
                         AddChildDevice(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -60,7 +61,7 @@ fun RegisterCard(navController: NavHostController, viewModel: AppViewModel) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            RegisterHeader()
+            RegisterHeader(navController)
             Spacer(modifier = Modifier.height(24.dp))
             RegisterForm(viewModel, navController)
         }
@@ -68,8 +69,10 @@ fun RegisterCard(navController: NavHostController, viewModel: AppViewModel) {
 }
 
 @Composable
-fun RegisterHeader() {
-    Row(
+fun RegisterHeader(
+    navController: NavHostController
+) {
+    Box( // Use a Box as the main container
         modifier = Modifier
             .fillMaxWidth()
             .background(
@@ -79,18 +82,30 @@ fun RegisterHeader() {
                     end = Offset(1000f, 1000f)
                 )
             )
-            .height(80.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(80.dp)
     ) {
-        Spacer(modifier = Modifier.width(50.dp))
+        // Back Button aligned to the start
+        IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterStart) // Align to the start of the Box
+                .padding(horizontal = 16.dp),
+            onClick = {navController.navigate(Screens.SignIn)}
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
+        }
+
+        // Text centered in the Box
         Text(
             text = "REGISTER",
             fontSize = 30.sp,
             style = MaterialTheme.typography.titleLarge.copy(color = Color.White),
             textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.align(Alignment.Center) // Align to the center of the Box
         )
-        Spacer(modifier = Modifier.width(60.dp))
     }
 }
 
@@ -111,6 +126,11 @@ fun RegisterForm(viewModel: AppViewModel, navController: NavHostController) {
         }
         InputField(null, "E-mail", value = viewModel.emailInput) {
             viewModel.emailInput = it
+        }
+        viewModel.parentDeviceNameInput?.let {
+            InputField(null, "Device Name", isPassword = false, value = it) {
+                viewModel.parentDeviceNameInput = it
+            }
         }
         Spacer(modifier = Modifier.height(32.dp))
         InputField(Icons.Default.Lock, "Password", isPassword = true, value = viewModel.passwordInput) {
@@ -144,9 +164,7 @@ fun RegisterButton(
         Button(
             onClick = {
                 viewModel.registerUser(context) {
-                    navController.navigate(Screens.Home)
-                    viewModel.loginState = true
-                    viewModel.isDrawer = true
+                    navController.navigate(Screens.Login)
                 }
             },
             modifier = Modifier

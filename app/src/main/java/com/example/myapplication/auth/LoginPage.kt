@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
@@ -67,7 +68,7 @@ fun LoginCard(navController: NavHostController, viewModel: AppViewModel) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LoginHeader()
+            LoginHeader(navController)
             Spacer(modifier = Modifier.height(24.dp))
             LoginForm(viewModel, navController)
         }
@@ -75,8 +76,10 @@ fun LoginCard(navController: NavHostController, viewModel: AppViewModel) {
 }
 
 @Composable
-fun LoginHeader() {
-    Row(
+fun LoginHeader(
+    navController: NavHostController
+) {
+    Box( // Use a Box as the main container
         modifier = Modifier
             .fillMaxWidth()
             .background(
@@ -86,21 +89,32 @@ fun LoginHeader() {
                     end = Offset(1000f, 1000f)
                 )
             )
-            .height(80.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(80.dp)
     ) {
-        Spacer(modifier = Modifier.width(50.dp))
+        // Back Button aligned to the start
+        IconButton(
+            modifier = Modifier
+                .align(Alignment.CenterStart) // Align to the start of the Box
+                .padding(horizontal = 16.dp),
+            onClick = {navController.navigate(Screens.SignIn)}
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
+        }
+
+        // Text centered in the Box
         Text(
             text = "LOGIN",
             fontSize = 30.sp,
             style = MaterialTheme.typography.titleLarge.copy(color = Color.White),
             textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.align(Alignment.Center) // Align to the center of the Box
         )
-        Spacer(modifier = Modifier.width(60.dp))
     }
 }
-
 @Composable
 fun LoginForm(viewModel: AppViewModel, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
@@ -134,9 +148,7 @@ fun LoginForm(viewModel: AppViewModel, navController: NavHostController) {
         Spacer(modifier = Modifier.weight(1f))
         TextButton(onClick = {navController.navigate(Screens.Register)}, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Text("Don't Have an Account? Register Now!",color = Color(0xFF0D47A1), modifier = Modifier.clickable {
-                navController.navigate(Screens.Home)
-                viewModel.isDrawer = true
-                viewModel.loginState = true
+                navController.navigate(Screens.Register)
             })
         }
     }

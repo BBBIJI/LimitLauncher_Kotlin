@@ -31,7 +31,7 @@ data class UserData(
     @SerializedName("paymentMethod") val paymentMethod: String,
     @SerializedName("children") val children: List<Child>,
     @SerializedName("devices") val devices: List<Device>,
-    @SerializedName("parentDevices") val parentDevices: List<Any?>,
+    @SerializedName("parentDevices") val parentDevices: List<ParentDevice>,
     @SerializedName("childRequests") val childRequests: ChildRequests,
     @SerializedName("serverTime") val serverTime: Long,
 )
@@ -76,6 +76,14 @@ data class Device(
     @SerializedName("permissionStatus") val permissionStatus: Long,
     @SerializedName("iosMdmSettingComplete") val iosMdmSettingComplete: Boolean,
 )
+
+data class ParentDevice(
+    val id: Int,
+    val deviceUuid: String,
+    val deviceName: String?,   // Nullable since it can be null
+    val deviceActive: Boolean
+)
+
 
 data class ChildRequests(
     @SerializedName("extensionRequests") val extensionRequests: List<Any?>,
@@ -133,9 +141,9 @@ data class UserRegistrationRequest(
     val lastname: String,
     val email: String,
     val password: String,
-    val uuid: String,
     val role: String = "P",
-    val system: String = "Android"
+    val system: String = "Android",
+    val deviceName:String,
 )
 
 data class RegistrationResponse(
