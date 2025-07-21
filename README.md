@@ -83,3 +83,33 @@ Also includes screen time controls.
 ## 📌 Screenshots
 
 > *(Screenshots available above for visual reference)*
+
+<img width="467" height="935" alt="image" src="https://github.com/user-attachments/assets/11b3b20a-ab05-4a3e-a3ba-dd7ce4e3a7ec" />
+
+
+<img width="438" height="793" alt="image" src="https://github.com/user-attachments/assets/adc5c796-1d37-4c37-b831-ff0e202ec2f4" />
+
+
+<img width="438" height="759" alt="image" src="https://github.com/user-attachments/assets/97530d56-37ad-4f31-b215-4bb78b6c748f" />
+
+
+<img width="447" height="791" alt="image" src="https://github.com/user-attachments/assets/4685cd79-cb61-477f-b39a-1af4553721b3" />
+
+
+<img width="429" height="754" alt="image" src="https://github.com/user-attachments/assets/b6774d90-5e36-42dc-a154-9388f1c20df3" />
+
+
+<img width="422" height="779" alt="image" src="https://github.com/user-attachments/assets/0017ff9e-3414-4436-894a-315aa1a1f161" />
+
+
+<img width="432" height="801" alt="image" src="https://github.com/user-attachments/assets/798f4eaf-cbeb-417e-bc91-b4215b6e6238" />
+
+
+<img width="433" height="765" alt="image" src="https://github.com/user-attachments/assets/32e15846-d160-4d28-a5f8-8bb0aa5d1858" />
+
+
+
+
+
+
+
