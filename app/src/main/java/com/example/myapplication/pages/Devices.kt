@@ -95,6 +95,15 @@ fun DeviceListScreen(
                         text = parent.deviceName ?: "Unnamed Device",
                         modifier = Modifier.weight(1f)
                     )
+
+                    if (isEditMode) {
+                        Checkbox(
+                            checked = parent.deviceUuid in viewModel.selectedDeviceUuids,
+                            onCheckedChange = {
+                                viewModel.toggleDeviceSelection(parent.deviceUuid)
+                            }
+                        )
+                    }
                 }
             }
         }

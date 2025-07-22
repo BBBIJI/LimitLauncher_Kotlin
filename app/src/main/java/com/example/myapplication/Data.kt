@@ -6,9 +6,7 @@ import com.google.gson.annotations.SerializedName
 data class LoginRequest(
     @SerializedName("username") val username: String?,
     @SerializedName("password") val password: String?,
-    @SerializedName("uuid") val uuid: String,
-    val role : String = "P",
-    val system: String = "Windows"
+    @SerializedName("uuid") val uuid: String
 )
 
 data class LoginResponse(

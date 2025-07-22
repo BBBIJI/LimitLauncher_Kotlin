@@ -97,8 +97,6 @@
         var toggleState by mutableStateOf(ChildToggleState())
             private set
     
-        var toggleRequestInfo by mutableStateOf<ToggleRequest?>(null)
-    
         fun updateToggleState(
             gaming: Boolean? = null,
             socialMedia: Boolean? = null,
@@ -134,35 +132,35 @@
     
         // region --- Auth Functions ---
         fun login(context: Context) {
-            getOrCreateAppInstanceId(context) { uuid ->
-                viewModelScope.launch {
-                    try {
-                        val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
-                        val responseBody = response.body()
-    
-                        if (response.isSuccessful && responseBody?.status == "success") {
-                            loginResponse = responseBody
-                            responseMessage = "Login Successful"
-                            loginState = true
-                            _isLoggedIn.value = true
-                            Log.d("AppViewModel", "Login successful with UUID/FID: $uuid")
-                        } else {
-                            responseMessage = "Invalid credentials"
-                            Log.d("AppViewModel", "Invalid credentials")
-                        }
-                    } catch (e: IOException) {
-                        responseMessage = "Network error: ${e.message}"
-                    } catch (e: HttpException) {
-                        responseMessage = "Server error: ${e.message()}"
-                    } catch (e: Exception) {
-                        responseMessage = "Unknown error: ${e.message}"
-                    } finally {
-                        loading = false
+            val uuid = UUID.randomUUID().toString() // OR use a static value if needed
+
+            viewModelScope.launch {
+                try {
+                    val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
+                    val responseBody = response.body()
+
+                    if (response.isSuccessful && responseBody?.status == "success") {
+                        loginResponse = responseBody
+                        responseMessage = "Login Successful"
+                        loginState = true
+                        _isLoggedIn.value = true
+                        Log.d("AppViewModel", "Login successful with UUID: $uuid")
+                    } else {
+                        responseMessage = "Invalid credentials"
+                        Log.d("AppViewModel", "Invalid credentials")
                     }
+                } catch (e: IOException) {
+                    responseMessage = "Network error: ${e.message}"
+                } catch (e: HttpException) {
+                    responseMessage = "Server error: ${e.message()}"
+                } catch (e: Exception) {
+                    responseMessage = "Unknown error: ${e.message}"
+                } finally {
+                    loading = false
                 }
             }
         }
-    
+
         fun logout(context: Context) {
             _isLoggedIn.value = false
             isDrawer = false
@@ -208,26 +206,33 @@
     
         // region --- Child Functions ---
         fun refreshChildren(context: Context) {
-            getOrCreateAppInstanceId(context) { uuid ->
+            val uuid = UUID.randomUUID().toString() // OR use a static value if needed
+
                 viewModelScope.launch {
                     try {
+                        if (emailInput.isBlank() || passwordInput.isBlank()) {
+                            _deleteResult.value = "Missing credentials"
+                            return@launch
+                        }
+
                         val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
                         val refreshedLogin = response.body()
-    
+
                         if (response.isSuccessful && refreshedLogin?.status == "success") {
                             loginResponse = refreshedLogin
-                            _monitorStates.value = refreshedLogin.data?.devices
-                                ?.associate { it.childId to it.monitorActive } ?: emptyMap()
+                            val devices = refreshedLogin.data?.devices.orEmpty()
+                            _monitorStates.value = devices.associate { it.childId to it.monitorActive }
                         } else {
-                            _deleteResult.value = "Failed to refresh children list"
+                            _deleteResult.value = "Failed to refresh children list: ${response.message()}"
                         }
                     } catch (e: Exception) {
-                        _deleteResult.value = "Error refreshing: ${e.message}"
+                        Log.e("AppViewModel", "Exception in refreshChildren", e)
+                        _deleteResult.value = "Error refreshing: ${e.localizedMessage}"
                     }
                 }
-            }
         }
-    
+
+
         fun refreshChildById(context: Context, childId: Long, onRefreshed: (Child?) -> Unit) {
             getOrCreateAppInstanceId(context) { uuid ->
                 viewModelScope.launch {
