@@ -18,6 +18,7 @@
     import java.time.Instant
     import java.time.ZoneId
     import java.util.*
+    import android.os.Build
     
     class AppViewModel : ViewModel() {
     
@@ -28,7 +29,6 @@
         var emailInput by mutableStateOf("")
         var passwordInput by mutableStateOf("")
         var childNameInput by mutableStateOf<String?>(null)
-        var parentDeviceNameInput by mutableStateOf<String>("")
     
         private val _drawerShouldBeOpen = MutableStateFlow(false)
         val drawerShouldBeOpen: StateFlow<Boolean> = _drawerShouldBeOpen.asStateFlow()
@@ -132,34 +132,70 @@
     
         // region --- Auth Functions ---
         fun login(context: Context) {
-            val uuid = UUID.randomUUID().toString() // OR use a static value if needed
+            val uuid = UUID.randomUUID().toString()
 
             viewModelScope.launch {
                 try {
-                    val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
-                    val responseBody = response.body()
+                    loading = true
+                    Log.d("AppViewModel", "Trying LoginRequestNew...")
 
-                    if (response.isSuccessful && responseBody?.status == "success") {
+                    // First attempt using new login structure (includes system + role)
+                    val newLoginResponse = apiService.userLoginNew(
+                        LoginRequestNew(
+                            username = emailInput,
+                            password = passwordInput,
+                            uuid = uuid,
+                            deviceName = getDeviceName()
+                        )
+                    )
+
+                    if (newLoginResponse.isSuccessful && newLoginResponse.body()?.status == "success") {
+                        // Success with new login
+                        val responseBody = newLoginResponse.body()
                         loginResponse = responseBody
                         responseMessage = "Login Successful"
                         loginState = true
                         _isLoggedIn.value = true
-                        Log.d("AppViewModel", "Login successful with UUID: $uuid")
+                        Log.d("AppViewModel", "Login successful using LoginRequestNew.")
                     } else {
-                        responseMessage = "Invalid credentials"
-                        Log.d("AppViewModel", "Invalid credentials")
+                        // If new login fails, try fallback
+                        Log.d("AppViewModel", "LoginRequestNew failed, trying LoginRequestExisting...")
+
+                        val fallbackResponse = apiService.userLoginExisting(
+                            LoginRequestExisting(
+                                username = emailInput,
+                                password = passwordInput,
+                                uuid = uuid
+                            )
+                        )
+
+                        if (fallbackResponse.isSuccessful && fallbackResponse.body()?.status == "success") {
+                            val responseBody = fallbackResponse.body()
+                            loginResponse = responseBody
+                            responseMessage = "Login Successful (Fallback)"
+                            loginState = true
+                            _isLoggedIn.value = true
+                            Log.d("AppViewModel", "Login successful using LoginRequestExisting.")
+                        } else {
+                            responseMessage = "Login failed. Invalid credentials or account issue."
+                            Log.d("AppViewModel", "Both login attempts failed.")
+                        }
                     }
                 } catch (e: IOException) {
                     responseMessage = "Network error: ${e.message}"
+                    Log.e("AppViewModel", "IOException", e)
                 } catch (e: HttpException) {
                     responseMessage = "Server error: ${e.message()}"
+                    Log.e("AppViewModel", "HttpException", e)
                 } catch (e: Exception) {
                     responseMessage = "Unknown error: ${e.message}"
+                    Log.e("AppViewModel", "Exception", e)
                 } finally {
                     loading = false
                 }
             }
         }
+
 
         fun logout(context: Context) {
             _isLoggedIn.value = false
@@ -182,8 +218,7 @@
                                 firstname = firstNameInput,
                                 lastname = lastNameInput,
                                 email = emailInput,
-                                password = passwordInput,
-                                deviceName = parentDeviceNameInput
+                                password = passwordInput
                             )
     
                         val response = apiService.registerUser(request)
@@ -207,7 +242,6 @@
         // region --- Child Functions ---
         fun refreshChildren(context: Context) {
             val uuid = UUID.randomUUID().toString() // OR use a static value if needed
-
                 viewModelScope.launch {
                     try {
                         if (emailInput.isBlank() || passwordInput.isBlank()) {
@@ -215,7 +249,7 @@
                             return@launch
                         }
 
-                        val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
+                        val response = apiService.userLoginExisting(LoginRequestExisting(emailInput, passwordInput, uuid))
                         val refreshedLogin = response.body()
 
                         if (response.isSuccessful && refreshedLogin?.status == "success") {
@@ -237,7 +271,7 @@
             getOrCreateAppInstanceId(context) { uuid ->
                 viewModelScope.launch {
                     try {
-                        val response = apiService.userLogin(LoginRequest(emailInput, passwordInput, uuid))
+                        val response = apiService.userLoginExisting(LoginRequestExisting(emailInput, passwordInput, uuid))
                         val refreshedLogin = response.body()
                         if (response.isSuccessful && refreshedLogin?.status == "success") {
                             loginResponse = refreshedLogin
@@ -482,7 +516,18 @@
             }
         }
         // endregion
-    
+
+        fun getDeviceName(): String {
+            val manufacturer = Build.MANUFACTURER.capitalize()
+            val model = Build.MODEL
+            return if (model.startsWith(manufacturer, ignoreCase = true)) {
+                model
+            } else {
+                "$manufacturer $model"
+            }
+        }
+
+
         var isEditMode by mutableStateOf(false)
             private set
     

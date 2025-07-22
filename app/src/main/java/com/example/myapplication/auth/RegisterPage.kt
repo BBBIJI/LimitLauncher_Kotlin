@@ -127,11 +127,6 @@ fun RegisterForm(viewModel: AppViewModel, navController: NavHostController) {
         InputField(null, "E-mail", value = viewModel.emailInput) {
             viewModel.emailInput = it
         }
-        viewModel.parentDeviceNameInput?.let {
-            InputField(null, "Device Name", isPassword = false, value = it) {
-                viewModel.parentDeviceNameInput = it
-            }
-        }
         Spacer(modifier = Modifier.height(32.dp))
         InputField(Icons.Default.Lock, "Password", isPassword = true, value = viewModel.passwordInput) {
             viewModel.passwordInput = it

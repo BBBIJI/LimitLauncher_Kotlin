@@ -6,7 +6,10 @@ import retrofit2.Response
 
 interface UserApiService {
     @POST("wp-json/lldb/getInfo")
-    suspend fun userLogin(@Body request: LoginRequest): Response<LoginResponse>
+    suspend fun userLoginNew(@Body request: LoginRequestNew): Response<LoginResponse>
+
+    @POST("wp-json/lldb/getInfo")
+    suspend fun userLoginExisting(@Body request: LoginRequestExisting): Response<LoginResponse>
 
     @POST("wp-json/custom-register/register")
     suspend fun registerUser(@Body request: UserRegistrationRequest): Response<RegistrationResponse>

@@ -149,8 +149,7 @@ data class UserRegistrationRequest(
     val email: String,
     val password: String,
     val role: String = "P",
-    val system: String = "Android",
-    val deviceName:String,
+    val system: String = "Android"
 )
 
 data class RegistrationResponse(
@@ -187,5 +186,21 @@ data class DeleteDeviceRequest(
     @SerializedName("userId") val userId: Long?,
     @SerializedName("uuid") val uuid: String
 )
+
+data class LoginRequestNew(
+    val username: String,
+    val password: String,
+    val uuid: String,
+    val system: String = "Android",
+    val role: String = "P",
+    val deviceName: String
+)
+
+data class LoginRequestExisting(
+    val username: String,
+    val password: String,
+    val uuid: String
+)
+
 
 
