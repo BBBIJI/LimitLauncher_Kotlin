@@ -1,6 +1,7 @@
 [versions]
 agp = "8.7.3"
 converterGson = "2.11.0"
+datetimeVersion = "0.9.0"
 firebaseAuthKtx = "23.2.1"
 firebaseInstallations = "18.0.0"
 firebaseInstallationsKtx = "18.0.0"
@@ -30,6 +31,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+compose-material-dialogs-datetime = { module = "io.github.vanpra.compose-material-dialogs:datetime", version.ref = "datetimeVersion" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 firebase-installations = { module = "com.google.firebase:firebase-installations", version.ref = "firebaseInstallations" }

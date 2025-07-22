@@ -57,7 +57,9 @@ sealed class Screens{
     data object AddChildDevice: Screens()
 
     @Serializable
-    data object ScreenTimeSettings : Screens()
+    data class ScreenTimeSettings(
+        val childId: Long
+    ) : Screens()
 
     @Serializable
     data object AddChildProfile : Screens()

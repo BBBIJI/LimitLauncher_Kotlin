@@ -14,6 +14,9 @@ interface UserApiService {
     @POST("wp-content/plugins/lldb/updateChildInfo.php")
     suspend fun changeChildProfileSettings(@Body request: ChangeChildInfoRequest?): Response<CallResponse>
 
+    @POST("wp-content/plugins/lldb/updateChildInfo.php")
+    suspend fun updateChildScreenTimeSettings(@Body request: ChildScheduleRequest?): Response<CallResponse>
+
     @POST("wp-content/plugins/lldb/deleteChild.php")
     suspend fun deleteChild(@Body request: DeleteChildRequest): Response<CallResponse>
 

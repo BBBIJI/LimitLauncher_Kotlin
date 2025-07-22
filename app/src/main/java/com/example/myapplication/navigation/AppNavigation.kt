@@ -546,10 +546,13 @@ fun AppNavigationGraph(
                         )
                     }
                     composable<Screens.ScreenTimeSettings> {
+                        val args = it.toRoute<Screens.ScreenTimeSettings>()
                         ScreenTimeSettings(
                             modifier = Modifier,
                             paddingValues = paddingvalues,
-                            navController = navController
+                            navController = navController,
+                            viewModel,
+                            args = args
                         )
                     }
                     composable<Screens.AddChildProfile> {

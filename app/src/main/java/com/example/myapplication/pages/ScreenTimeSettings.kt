@@ -1,102 +1,65 @@
 package com.example.myapplication.pages
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.wear.compose.material.Button
-import com.example.myapplication.ToggleRequest
-import java.util.Calendar
+import com.example.myapplication.AppViewModel
+import com.example.myapplication.Child
+import com.example.myapplication.navigation.Screens
+import com.example.myapplication.timeStringToMinutes
+import java.util.*
 
 @Composable
 fun ScreenTimeSettings(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues,
     navController: NavHostController,
+    viewModel: AppViewModel,
+    args: Screens.ScreenTimeSettings
 ) {
-
     var breakAfterTime by remember { mutableStateOf("00:00") }
     var breakTimeDuration by remember { mutableStateOf("00:00") }
     var totalAllowance by remember { mutableStateOf("00:00") }
-    var showTimePicker by remember { mutableStateOf(false) }
-    var showTimePicker2 by remember { mutableStateOf(false) }
-    var showTimePicker3 by remember { mutableStateOf(false) }
 
+    var activePickerField by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
-    if (showTimePicker) {
-        Dialog(onDismissRequest = { showTimePicker = false }) {
-            InputExample(
-                onDismiss = { showTimePicker = false },
+    LaunchedEffect(Unit) {
+        viewModel.refreshChildren(context)
+    }
+
+    if (activePickerField != null) {
+        Dialog(onDismissRequest = { activePickerField = null }) {
+            TimePickerDialog(
                 onConfirm = { selectedTime ->
-                    breakAfterTime = selectedTime
-                    showTimePicker = false
-                }
+                    when (activePickerField) {
+                        "breakAfter" -> breakAfterTime = selectedTime
+                        "breakDuration" -> breakTimeDuration = selectedTime
+                        "totalAllowance" -> totalAllowance = selectedTime
+                    }
+                    activePickerField = null
+                },
+                onDismiss = { activePickerField = null }
             )
         }
     }
 
-    if (showTimePicker2) {
-        Dialog(onDismissRequest = { showTimePicker2 = false }) {
-            InputExample(
-                onDismiss = { showTimePicker2 = false },
-                onConfirm = { selectedTime ->
-                    breakTimeDuration = selectedTime
-                    showTimePicker2 = false
-                }
-            )
-        }
-    }
-
-    if (showTimePicker3) {
-        Dialog(onDismissRequest = { showTimePicker3 = false }) {
-            InputExample(
-                onDismiss = { showTimePicker3 = false },
-                onConfirm = { selectedTime ->
-                    totalAllowance = selectedTime
-                    showTimePicker3 = false
-                }
-            )
-        }
-    }
-
-
-
-    Column(
-        modifier = Modifier.padding(paddingValues)
-    ) {
+    Column(modifier = Modifier.padding(paddingValues)) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,149 +69,179 @@ fun ScreenTimeSettings(
                 topStart = 50.dp,
                 bottomEnd = 16.dp,
                 bottomStart = 16.dp
-            ),
-        ) {
-            Box(modifier = Modifier) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    shape = RoundedCornerShape(50.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF0f1a38),
-                    ),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Absolute.Center
+            )) {
+            Column {
+                // Header
+                Box(modifier = Modifier) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        shape = RoundedCornerShape(50.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF0f1a38),
+                        ),
                     ) {
-                        Text(
-                            "SCREEN TIME SETTINGS",
-                            modifier = Modifier.padding(start = 16.dp),
-                            color = Color.White
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Absolute.Center
+                        ) {
+                            Text(
+                                "SCREEN TIME SETTINGS",
+                                modifier = Modifier.padding(start = 16.dp),
+                                color = Color.White
+                            )
+                        }
                     }
                 }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                var mandatoryScreenTime by remember { mutableStateOf(true) }
-                Text(text = "Mandatory Screen Time", modifier = Modifier.padding(horizontal = 30.dp))
-                Switch(
-                    checked = mandatoryScreenTime,
-                    onCheckedChange = {
-                        mandatoryScreenTime = it
-                    },
-                    modifier = modifier,
-                    thumbContent = {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                        )
-                    }
+
+                // Mandatory screen time
+                SwitchRow(
+                    label = "Mandatory Screen Time",
+                    checked = viewModel.isMandatoryScreenTimeEnabled,
+                    onCheckedChange = { viewModel.isMandatoryScreenTimeEnabled = it }
                 )
-            }
-            Row(modifier = Modifier.padding(start = 48.dp, end = 16.dp)) {
-                Text("Break after how long")
-                Spacer(modifier.weight(0.1f))
-                Text(
-                    modifier = modifier.clickable { showTimePicker = true },
-                    text = breakAfterTime
+
+                // Break After
+                TimeRow(
+                    label = "Break after how long",
+                    value = breakAfterTime,
+                    onClick = { activePickerField = "breakAfter" },
+                    enabled = viewModel.isMandatoryScreenTimeEnabled
                 )
-            }
-            Row(modifier = Modifier.padding(start = 48.dp, end = 16.dp)) {
-                Text("Break time duration")
-                Spacer(modifier.weight(0.1f))
-                Text(
-                    modifier = modifier.clickable { showTimePicker2 = true },
-                    text = breakTimeDuration
+
+                // Break Duration
+                TimeRow(
+                    label = "Break time duration",
+                    value = breakTimeDuration,
+                    onClick = { activePickerField = "breakDuration" },
+                    enabled = viewModel.isMandatoryScreenTimeEnabled
                 )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                var cumulativeScreenTime by remember { mutableStateOf(true) }
-                Text(text = "Cumulative Screentime", modifier = Modifier.padding(horizontal = 30.dp))
-                Switch(
-                    checked = cumulativeScreenTime,
-                    onCheckedChange = {
-                        cumulativeScreenTime = it
-                    },
-                    modifier = modifier,
-                    thumbContent = {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                        )
-                    }
+
+                // Cumulative screen time
+                SwitchRow(
+                    label = "Cumulative Screentime",
+                    checked = viewModel.isCumulativeScreentimeEnabled,
+                    onCheckedChange = { viewModel.isCumulativeScreentimeEnabled = it }
                 )
-            }
-            Row(modifier = Modifier.padding(start = 48.dp, end = 16.dp)) {
-                Text("Total allowance")
-                Spacer(modifier.weight(0.1f))
-                Text(
-                    modifier = modifier.clickable { showTimePicker3 = true },
-                    text = totalAllowance
+
+                // Total Allowance
+                TimeRow(
+                    label = "Total allowance",
+                    value = totalAllowance,
+                    onClick = { activePickerField = "totalAllowance" },
+                    enabled = viewModel.isCumulativeScreentimeEnabled
                 )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                var noScreenPeriod by remember { mutableStateOf(true) }
-                Text(text = "No Screen Period", modifier = Modifier.padding(horizontal = 30.dp))
-                Switch(
-                    checked = noScreenPeriod,
-                    onCheckedChange = {
-                        noScreenPeriod = it
-                    },
-                    modifier = modifier,
-                    thumbContent = {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                        )
-                    }
+
+                // No Screen Period
+                SwitchRow(
+                    label = "No Screen Period",
+                    checked = viewModel.isNoScreenPeriodOn,
+                    onCheckedChange = { viewModel.isNoScreenPeriodOn = it }
                 )
+
+                // Static row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 48.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("School hours")
+                    Text("M - F")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-            Row(modifier = Modifier.padding(start = 48.dp, end = 16.dp)) {
-                Text("School hours")
-                Spacer(modifier.weight(0.1f))
-                Text("M - F")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
         }
+
         Spacer(modifier = Modifier.weight(0.1f))
         Button(
-            onClick = {},
-            modifier.fillMaxWidth().padding(36.dp)
+            onClick = {
+                val breakAfterMinutes = timeStringToMinutes(breakAfterTime)
+                val breakDurationMinutes = timeStringToMinutes(breakTimeDuration)
+                val totalAllowedMinutes = timeStringToMinutes(totalAllowance)
+
+                viewModel.updateMainSwitchTime(
+                    childId = args.childId,
+                    onTimeMinutes = if (viewModel.isMandatoryScreenTimeEnabled) breakAfterMinutes else -1440,
+                    offTimeMinutes = if (viewModel.isMandatoryScreenTimeEnabled) breakDurationMinutes else 0,
+                    cumulativeTime = if (viewModel.isCumulativeScreentimeEnabled) totalAllowedMinutes else -1440,
+                    context = context,
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 36.dp, vertical = 12.dp)
         ) {
             Text("Save")
         }
+
+    }
+}
+
+
+@Composable
+fun TimeRow(label: String, value: String, onClick: () -> Unit, enabled: Boolean = true) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label)
+        Text(
+            text = value,
+            modifier = Modifier
+                .clickable(enabled = enabled) { onClick() },
+            color = if (enabled) MaterialTheme.colorScheme.primary else Color.Gray
+        )
+    }
+}
+
+@Composable
+fun SwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 30.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            thumbContent = {
+                if (checked) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize)
+                    )
+                }
+            }
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputExample(
+fun TimePickerDialog(
     onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     val currentTime = Calendar.getInstance()
-    val timePickerState = rememberTimePickerState(
+    val state = rememberTimePickerState(
         initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
         initialMinute = currentTime.get(Calendar.MINUTE),
-        is24Hour = true,
+        is24Hour = true
     )
 
     Card(
@@ -262,19 +255,17 @@ fun InputExample(
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TimeInput(state = timePickerState)
+            TimeInput(state = state)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = onDismiss) {
                     Text("Dismiss")
                 }
                 Button(onClick = {
-                    val hour = timePickerState.hour
-                    val minute = timePickerState.minute
-                    val formatted = String.format("%02d:%02d", hour, minute)
-                    onConfirm(formatted)
+                    val time = String.format("%02d:%02d", state.hour, state.minute)
+                    onConfirm(time)
                 }) {
                     Text("Confirm")
                 }
@@ -282,4 +273,3 @@ fun InputExample(
         }
     }
 }
-

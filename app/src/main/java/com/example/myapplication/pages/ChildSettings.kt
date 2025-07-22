@@ -211,7 +211,9 @@ fun ChildSettings(
                 .fillMaxWidth()
                 .padding(24.dp)
                 .clickable {
-                    navController.navigate(Screens.ScreenTimeSettings)
+                    navController.navigate(Screens.ScreenTimeSettings(
+                        childId = args.childId
+                    ))
                 },
             shape = RoundedCornerShape(50.dp),
             colors = CardDefaults.cardColors(

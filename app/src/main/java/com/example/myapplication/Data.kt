@@ -127,6 +127,15 @@ data class UserResponse(
     @SerializedName("paymentMethod") val paymentMethod: String
 )
 
+data class ChildScheduleRequest(
+    val userId: Long,
+    val childId: Long,
+    val mandatoryBreakAfter: Int,   // in minutes from midnight (e.g. 14:00 -> 840)
+    val mandatoryBreakDuration: Int,   // in minutes from midnight (e.g. 17:00 -> 1020)
+    val cumulativeScreenTimeTotalAllowed: Int,   // in minutes from midnight (e.g. 17:00 -> 1020)
+)
+
+
 // ✅ Gaming, YouTube, & Social Media toggle request
 data class ToggleRequest(
     @SerializedName("userId") val userId: Long,
